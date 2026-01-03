@@ -29,7 +29,6 @@ const CheckoutSchema = z.object({
 
 cartRouter.post('/add', async (req: Request, res: Response): Promise<void> => {
   try {
-    // DEBUG: Логируем все cookies и headers
     console.log('🍪 Cookies:', req.cookies);
     console.log('📨 Headers:', {
       origin: req.headers.origin,

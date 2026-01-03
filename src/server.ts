@@ -14,7 +14,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
-import { usersRouter, authRouter, cartRouter, adminRouter } from './routes/index.js';
+import { usersRouter, authRouter, cartRouter } from './routes/index.js';
 
 dotenv.config();
 
@@ -193,8 +193,6 @@ server.use('/auth', authRouter);
 console.log('✅ /auth registered');
 server.use('/cart', cartRouter);
 console.log('✅ /cart registered');
-server.use('/admin', adminRouter);
-console.log('✅ /admin registered');
 
 server.get('/flowers', (_req: Request, res: Response): void => {
   res.json(flowersData.flowers);
@@ -281,7 +279,6 @@ server.get('/', (_req: Request, res: Response): void => {
       users: '/users/*',
       cart: '/cart/*',
       flowers: '/flowers',
-      admin: '/admin/*',
       contact: '/contact',
       health: '/health',
     },
