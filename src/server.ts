@@ -91,16 +91,7 @@ const allowedOrigins = process.env.FRONTEND_URL
 
 server.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -171,10 +162,15 @@ ${email ? `Email: ${escapeHtml(email)}` : 'Email: Не указано'}
 });
 
 // API Routes
+console.log('📍 Registering routes...');
 server.use('/users', usersRouter);
+console.log('✅ /users registered');
 server.use('/auth', authRouter);
+console.log('✅ /auth registered');
 server.use('/cart', cartRouter);
+console.log('✅ /cart registered');
 server.use('/admin', adminRouter);
+console.log('✅ /admin registered');
 
 server.get('/flowers', (_req: Request, res: Response): void => {
   res.json(flowersData.flowers);
