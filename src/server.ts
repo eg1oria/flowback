@@ -94,14 +94,22 @@ console.log('🌐 Allowed Origins:', allowedOrigins);
 server.use(
   cors({
     origin: (origin, callback) => {
-      console.log('🔍 Request from origin:', origin); // Добавьте это
+      console.log('🔍 CORS check - Request from origin:', origin);
+      console.log('🔍 CORS check - Allowed origins:', allowedOrigins);
 
-      if (!origin) return callback(null, true);
+      // Разрешаем запросы без origin (например, Postman, curl)
+      if (!origin) {
+        console.log('✅ No origin - allowing request');
+        return callback(null, true);
+      }
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      // Проверяем, есть ли origin в списке разрешённых
+      if (allowedOrigins.includes(origin)) {
+        console.log('✅ Origin allowed:', origin);
         callback(null, true);
       } else {
-        console.log('❌ Origin blocked:', origin); // Добавьте это
+        console.log('❌ Origin blocked:', origin);
+        console.log('💡 Add this origin to FRONTEND_URL:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -110,6 +118,9 @@ server.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
+
+// Важно: добавьте обработку preflight запросов ПЕРЕД другими middleware
+server.options('*', cors());
 
 // Logging
 if (process.env.NODE_ENV === 'production') {
