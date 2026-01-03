@@ -13,12 +13,15 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { usersRouter, authRouter, cartRouter, adminRouter } from './routes/index.js';
-import flowersData from '../db.json';
+import { createRequire } from 'module';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const require = createRequire(import.meta.url);
+const flowersData = require('../db.json');
 
 const server = express();
 const PORT = process.env.PORT || 4000;
@@ -48,6 +51,7 @@ const generalLimiter = rateLimit({
   max: 100,
   message: 'Слишком много запросов с вашего IP, попробуйте позже',
   standardHeaders: true,
+  legacyHeaders: false,
 });
 
 const contactLimiter = rateLimit({
@@ -55,6 +59,7 @@ const contactLimiter = rateLimit({
   max: 5,
   message: 'Слишком много запросов, попробуйте позже',
   standardHeaders: true,
+  legacyHeaders: false,
 });
 
 server.use(
@@ -85,24 +90,19 @@ server.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 server.use(generalLimiter);
 
-server.use(
-  morgan('combined', {
-    skip: (req) => req.url.startsWith('/flowers'),
-  }),
-);
-
 interface TelegramResponse {
   ok: boolean;
   result?: any;
   description?: string;
 }
 
-server.post('/contact', contactLimiter, async (req: Request, res: Response) => {
+server.post('/contact', contactLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const result = contactSchema.safeParse(req.body);
 
     if (!result.success) {
-      return res.status(400).json({ error: result.error.errors[0].message });
+      res.status(400).json({ error: result.error.errors[0].message });
+      return;
     }
 
     const { name, email, phone, message } = result.data;
@@ -120,7 +120,8 @@ ${email ? `Email: ${escapeHtml(email)}` : 'Email: Не указано'}
     const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
     if (!BOT_TOKEN || !CHAT_ID) {
-      return res.status(500).json({ error: 'Ошибка конфигурации сервера' });
+      res.status(500).json({ error: 'Ошибка конфигурации сервера' });
+      return;
     }
 
     const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -132,7 +133,8 @@ ${email ? `Email: ${escapeHtml(email)}` : 'Email: Не указано'}
     const telegramResult = (await response.json()) as TelegramResponse;
 
     if (!telegramResult.ok) {
-      return res.status(500).json({ error: 'Ошибка при отправке сообщения' });
+      res.status(500).json({ error: 'Ошибка при отправке сообщения' });
+      return;
     }
 
     res.json({ ok: true });
@@ -147,44 +149,49 @@ server.use('/auth', authRouter);
 server.use('/cart', cartRouter);
 server.use('/admin', adminRouter);
 
-server.get('/flowers', (req: Request, res: Response) => {
+server.get('/flowers', (_req: Request, res: Response): void => {
   res.json(flowersData.flowers);
 });
 
-server.get('/flowers/:id', (req: Request, res: Response) => {
+server.get('/flowers/:id', (req: Request, res: Response): void => {
   if (!/^\d+$/.test(req.params.id)) {
-    return res.status(400).json({ error: 'Invalid ID format' });
+    res.status(400).json({ error: 'Invalid ID format' });
+    return;
   }
 
   const id = Number(req.params.id);
-  const flower = flowersData.flowers.find((f) => f.id === id);
+  const flower = flowersData.flowers.find((f: any) => f.id === id);
 
   if (!flower) {
-    return res.status(404).json({ error: 'Цветок не найден' });
+    res.status(404).json({ error: 'Цветок не найден' });
+    return;
   }
 
   res.json(flower);
 });
 
-server.patch('/flowers/:id', async (req: Request, res: Response) => {
+server.patch('/flowers/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!/^\d+$/.test(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid ID format' });
+      res.status(400).json({ error: 'Invalid ID format' });
+      return;
     }
 
     const id = Number(req.params.id);
     const { rating } = req.body;
 
     if (typeof rating !== 'number' || rating < 1 || rating > 5) {
-      return res.status(400).json({ error: 'Рейтинг должен быть числом от 1 до 5' });
+      res.status(400).json({ error: 'Рейтинг должен быть числом от 1 до 5' });
+      return;
     }
 
-    const flowerIndex = flowersData.flowers.findIndex((f) => f.id === id);
+    const flowerIndex = flowersData.flowers.findIndex((f: any) => f.id === id);
 
     if (flowerIndex === -1) {
-      return res.status(404).json({ error: 'Цветок не найден' });
+      res.status(404).json({ error: 'Цветок не найден' });
+      return;
     }
-
+    
     const dbPath = path.join(__dirname, '..', 'db.json');
     await fs.writeFile(dbPath, JSON.stringify(flowersData, null, 2), 'utf-8');
 
@@ -198,15 +205,15 @@ server.patch('/flowers/:id', async (req: Request, res: Response) => {
   }
 });
 
-server.get('/health', (req: Request, res: Response) => {
+server.get('/health', (_req: Request, res: Response): void => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-server.use((req: Request, res: Response) => {
+server.use((_req: Request, res: Response): void => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-server.use((err: any, req: Request, res: Response, next: NextFunction) => {
+server.use((err: any, _req: Request, res: Response, _next: NextFunction): void => {
   console.error('Error:', err);
   const status = err.status || 500;
   const message = err.message || 'Internal server error';

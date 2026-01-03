@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { authorizeRequest } from '../auth.js';
 import { Cart, Users } from '../database/index.js';
 
@@ -11,23 +11,25 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'leontevegor57@gmail.com')
 console.log('🔧 ADMIN_EMAILS loaded:', process.env.ADMIN_EMAILS);
 console.log('🔧 ADMIN_EMAILS array:', ADMIN_EMAILS);
 
-function isAdmin(req: any, res: any, next: any) {
+function isAdmin(req: Request, res: Response, next: NextFunction): void {
   const userId = authorizeRequest(req);
 
   if (!userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
   }
 
   const user = Users.getOne(userId);
 
   if (!user || !ADMIN_EMAILS.includes(user.email)) {
-    return res.status(403).json({ error: 'Доступ запрещен. Требуются права администратора' });
+    res.status(403).json({ error: 'Доступ запрещен. Требуются права администратора' });
+    return;
   }
 
   next();
 }
 
-adminRouter.get('/users', isAdmin, async (req, res) => {
+adminRouter.get('/users', isAdmin, async (_req: Request, res: Response): Promise<void> => {
   try {
     const users = Users.getAll();
 
@@ -57,40 +59,47 @@ adminRouter.get('/users', isAdmin, async (req, res) => {
   }
 });
 
-adminRouter.delete('/users/:userId', isAdmin, async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const adminId = authorizeRequest(req);
+adminRouter.delete(
+  '/users/:userId',
+  isAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const adminId = authorizeRequest(req);
 
-    if (userId === adminId) {
-      return res.status(400).json({ error: 'Вы не можете удалить свой собственный аккаунт' });
+      if (userId === adminId) {
+        res.status(400).json({ error: 'Вы не можете удалить свой собственный аккаунт' });
+        return;
+      }
+
+      const user = Users.getOne(userId);
+
+      if (!user) {
+        res.status(404).json({ error: 'Пользователь не найден' });
+        return;
+      }
+
+      await Cart.clearForUser(userId);
+
+      const deleted = await Users.delete(userId);
+
+      if (!deleted) {
+        res.status(404).json({ error: 'Пользователь не найден' });
+        return;
+      }
+
+      res.json({
+        success: true,
+        message: `Пользователь ${user.email} успешно удален`,
+      });
+    } catch (error) {
+      console.error('DELETE user error:', error);
+      res.status(500).json({ error: 'Ошибка при удалении пользователя' });
     }
+  },
+);
 
-    const user = Users.getOne(userId);
-
-    if (!user) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
-
-    await Cart.clearForUser(userId);
-
-    const deleted = await Users.delete(userId);
-
-    if (!deleted) {
-      return res.status(404).json({ error: 'Пользователь не найден' });
-    }
-
-    res.json({
-      success: true,
-      message: `Пользователь ${user.email} успешно удален`,
-    });
-  } catch (error) {
-    console.error('DELETE user error:', error);
-    res.status(500).json({ error: 'Ошибка при удалении пользователя' });
-  }
-});
-
-adminRouter.get('/check', async (req, res) => {
+adminRouter.get('/check', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
@@ -99,7 +108,8 @@ adminRouter.get('/check', async (req, res) => {
 
     if (!userId) {
       console.log('❌ No userId - not authenticated');
-      return res.json({ isAdmin: false, reason: 'Not authenticated' });
+      res.json({ isAdmin: false, reason: 'Not authenticated' });
+      return;
     }
 
     const user = Users.getOne(userId);
@@ -107,7 +117,8 @@ adminRouter.get('/check', async (req, res) => {
 
     if (!user) {
       console.log('❌ User not found in database');
-      return res.json({ isAdmin: false, reason: 'User not found' });
+      res.json({ isAdmin: false, reason: 'User not found' });
+      return;
     }
 
     const isAdminUser = ADMIN_EMAILS.includes(user.email);

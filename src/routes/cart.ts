@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { authorizeRequest } from '../auth.js';
 import { Cart } from '../database/index.js';
@@ -27,12 +27,13 @@ const CheckoutSchema = z.object({
   postCardText: z.string(),
 });
 
-cartRouter.get('/', async (req, res) => {
+cartRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     const items = Cart.getAllForUser(userId);
@@ -50,20 +51,22 @@ cartRouter.get('/', async (req, res) => {
   }
 });
 
-cartRouter.post('/add', async (req, res) => {
+cartRouter.post('/add', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     const parseResult = AddItemSchema.safeParse(req.body);
 
     if (!parseResult.success) {
-      return res.status(400).json({
+      res.status(400).json({
         error: parseResult.error.issues[0].message,
       });
+      return;
     }
 
     const { productId, name, price, image, count } = parseResult.data;
@@ -76,20 +79,22 @@ cartRouter.post('/add', async (req, res) => {
   }
 });
 
-cartRouter.post('/update', async (req, res) => {
+cartRouter.post('/update', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     const parseResult = UpdateCountSchema.safeParse(req.body);
 
     if (!parseResult.success) {
-      return res.status(400).json({
+      res.status(400).json({
         error: parseResult.error.issues[0].message,
       });
+      return;
     }
 
     const { itemId, count } = parseResult.data;
@@ -97,13 +102,15 @@ cartRouter.post('/update', async (req, res) => {
     const item = Cart.getOne(itemId);
 
     if (!item || item.userId !== userId) {
-      return res.status(403).json({ error: 'Forbidden' });
+      res.status(403).json({ error: 'Forbidden' });
+      return;
     }
 
     const success = await Cart.updateCount(itemId, count);
 
     if (!success) {
-      return res.status(404).json({ error: 'Товар не найден' });
+      res.status(404).json({ error: 'Товар не найден' });
+      return;
     }
 
     res.json({ success: true });
@@ -113,12 +120,13 @@ cartRouter.post('/update', async (req, res) => {
   }
 });
 
-cartRouter.delete('/:id', async (req, res) => {
+cartRouter.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     const itemId = req.params.id;
@@ -126,13 +134,15 @@ cartRouter.delete('/:id', async (req, res) => {
     const item = Cart.getOne(itemId);
 
     if (!item || item.userId !== userId) {
-      return res.status(403).json({ error: 'Forbidden' });
+      res.status(403).json({ error: 'Forbidden' });
+      return;
     }
 
     const success = await Cart.removeItem(itemId);
 
     if (!success) {
-      return res.status(404).json({ error: 'Товар не найден' });
+      res.status(404).json({ error: 'Товар не найден' });
+      return;
     }
 
     res.json({ success: true });
@@ -142,32 +152,31 @@ cartRouter.delete('/:id', async (req, res) => {
   }
 });
 
-cartRouter.post('/checkout', async (req, res) => {
+cartRouter.post('/checkout', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     const parseResult = CheckoutSchema.safeParse(req.body);
 
     if (!parseResult.success) {
-      return res.status(400).json({
+      res.status(400).json({
         error: parseResult.error.issues[0].message,
       });
+      return;
     }
 
-    const { phone } = parseResult.data;
-    const { name } = parseResult.data;
-    const { adres } = parseResult.data;
-    const { postCard } = parseResult.data;
-    const { postCardText } = parseResult.data;
+    const { phone, name, adres, postCard, postCardText } = parseResult.data;
 
     const items = Cart.getAllForUser(userId);
 
     if (items.length === 0) {
-      return res.status(400).json({ error: 'Корзина пуста' });
+      res.status(400).json({ error: 'Корзина пуста' });
+      return;
     }
 
     const total = await Cart.getTotalForUser(userId);
@@ -210,7 +219,8 @@ ${items
 
     if (!BOT_TOKEN || !CHAT_ID) {
       console.error('Telegram credentials missing');
-      return res.status(500).json({ error: 'Telegram не настроен' });
+      res.status(500).json({ error: 'Telegram не настроен' });
+      return;
     }
 
     const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -226,7 +236,8 @@ ${items
 
     if (!result.ok) {
       console.error('Telegram error:', result);
-      return res.status(500).json({ error: 'Ошибка при отправке в Telegram' });
+      res.status(500).json({ error: 'Ошибка при отправке в Telegram' });
+      return;
     }
 
     await Cart.clearForUser(userId);
@@ -242,12 +253,13 @@ ${items
   }
 });
 
-cartRouter.delete('/', async (req, res) => {
+cartRouter.delete('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     await Cart.clearForUser(userId);
@@ -258,12 +270,13 @@ cartRouter.delete('/', async (req, res) => {
   }
 });
 
-cartRouter.get('/total', async (req, res) => {
+cartRouter.get('/total', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     const total = await Cart.getTotalForUser(userId);

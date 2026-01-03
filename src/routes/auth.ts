@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 
 import { authorizeResponse, unauthorizeResponse, authorizeRequest } from '../auth.js';
@@ -17,13 +17,14 @@ const LoginSchema = z.object({
   password: z.string(),
 });
 
-authRouter.post('/register', async (req, res) => {
+authRouter.post('/register', async (req: Request, res: Response): Promise<void> => {
   const bodyParseResult = RegisterSchema.safeParse(req.body);
 
   if (!bodyParseResult.success) {
-    return res.status(400).json({
+    res.status(400).json({
       error: bodyParseResult.error.issues[0].message,
     });
+    return;
   }
 
   const { username, email, password } = bodyParseResult.data;
@@ -33,9 +34,10 @@ authRouter.post('/register', async (req, res) => {
   try {
     user = await Users.create(username, email);
   } catch (error) {
-    return res.status(409).json({
+    res.status(409).json({
       error: 'Этот email уже занят',
     });
+    return;
   }
 
   await Passwords.create(user.id, password);
@@ -51,14 +53,14 @@ authRouter.post('/register', async (req, res) => {
     });
 });
 
-// Вход
-authRouter.post('/login', (req, res) => {
+authRouter.post('/login', (req: Request, res: Response): void => {
   const bodyParseResult = LoginSchema.safeParse(req.body);
 
   if (!bodyParseResult.success) {
-    return res.status(400).json({
+    res.status(400).json({
       error: bodyParseResult.error.issues[0].message,
     });
+    return;
   }
 
   const { email, password } = bodyParseResult.data;
@@ -66,9 +68,10 @@ authRouter.post('/login', (req, res) => {
   const user = Users.findOne((user) => user.email === email);
 
   if (!user || !Passwords.verify(user.id, password)) {
-    return res.status(401).json({
+    res.status(401).json({
       error: 'Неверный email или пароль',
     });
+    return;
   }
 
   authorizeResponse(res, user.id)
@@ -82,27 +85,29 @@ authRouter.post('/login', (req, res) => {
     });
 });
 
-authRouter.post('/logout', (req, res) => {
+authRouter.post('/logout', (_req: Request, res: Response): void => {
   unauthorizeResponse(res).status(200).json({
     message: 'Вы успешно вышли из системы',
   });
 });
 
-authRouter.get('/check', (req, res) => {
+authRouter.get('/check', (req: Request, res: Response): void => {
   const userId = authorizeRequest(req);
 
   if (!userId) {
-    return res.status(401).json({
+    res.status(401).json({
       isAuthenticated: false,
     });
+    return;
   }
 
   const user = Users.getOne(userId);
 
   if (!user) {
-    return res.status(404).json({
+    res.status(404).json({
       isAuthenticated: false,
     });
+    return;
   }
 
   res.status(200).json({
