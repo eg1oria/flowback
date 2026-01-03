@@ -1,3 +1,4 @@
+// ============ server.ts ============
 import express, { json, Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -11,9 +12,9 @@ import fetch from 'node-fetch';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 import { usersRouter, authRouter, cartRouter, adminRouter } from './routes/index.js';
-import { createRequire } from 'module';
 
 dotenv.config();
 
@@ -46,6 +47,9 @@ const contactSchema = z.object({
   message: z.string().min(5, 'Сообщение слишком короткое').max(1000),
 });
 
+// Trust proxy for deployment (Heroku, Railway, Render, etc.)
+server.set('trust proxy', 1);
+
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -72,6 +76,7 @@ server.use(
         imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
+    crossOriginEmbedderPolicy: false,
   }),
 );
 
@@ -79,14 +84,35 @@ server.use(json({ limit: '10kb' }));
 server.use(mongoSanitize());
 server.use(cookieParser());
 
+// CORS configuration for production
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
+  : ['http://localhost:3000'];
+
 server.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 
-server.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+// Logging
+if (process.env.NODE_ENV === 'production') {
+  server.use(morgan('combined'));
+} else {
+  server.use(morgan('dev'));
+}
 
 server.use(generalLimiter);
 
@@ -144,6 +170,7 @@ ${email ? `Email: ${escapeHtml(email)}` : 'Email: Не указано'}
   }
 });
 
+// API Routes
 server.use('/users', usersRouter);
 server.use('/auth', authRouter);
 server.use('/cart', cartRouter);
@@ -191,7 +218,16 @@ server.patch('/flowers/:id', async (req: Request, res: Response): Promise<void> 
       res.status(404).json({ error: 'Цветок не найден' });
       return;
     }
-    
+
+    // Update rating logic
+    const flower = flowersData.flowers[flowerIndex];
+    const currentRating = flower.rating || 0;
+    const ratingCount = flower.ratingCount || 0;
+
+    flower.ratingCount = ratingCount + 1;
+    flower.rating = (currentRating * ratingCount + rating) / flower.ratingCount;
+
+    // Save to file
     const dbPath = path.join(__dirname, '..', 'db.json');
     await fs.writeFile(dbPath, JSON.stringify(flowersData, null, 2), 'utf-8');
 
@@ -205,14 +241,39 @@ server.patch('/flowers/:id', async (req: Request, res: Response): Promise<void> 
   }
 });
 
+// Health check endpoint
 server.get('/health', (_req: Request, res: Response): void => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
+  });
 });
 
+// Root endpoint
+server.get('/', (_req: Request, res: Response): void => {
+  res.json({
+    message: 'Flower Shop API',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/auth/*',
+      users: '/users/*',
+      cart: '/cart/*',
+      flowers: '/flowers',
+      admin: '/admin/*',
+      contact: '/contact',
+      health: '/health',
+    },
+  });
+});
+
+// 404 handler
 server.use((_req: Request, res: Response): void => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// Global error handler
 server.use((err: any, _req: Request, res: Response, _next: NextFunction): void => {
   console.error('Error:', err);
   const status = err.status || 500;
@@ -223,9 +284,24 @@ server.use((err: any, _req: Request, res: Response, _next: NextFunction): void =
   });
 });
 
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received: closing HTTP server');
+  process.exit(0);
+});
+
+// Start server
 server.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
   console.log(`📍 http://localhost:${PORT}`);
   console.log('🔒 Security: Helmet, Rate Limiting, CORS enabled');
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 Allowed Origins: ${allowedOrigins.join(', ')}`);
 });
+
+export default server;
