@@ -84,43 +84,43 @@ server.use(json({ limit: '10kb' }));
 server.use(mongoSanitize());
 server.use(cookieParser());
 
-// CORS configuration for production
+// После helmet, json, mongoSanitize, cookieParser
+
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
   : ['http://localhost:3000'];
 
 console.log('🌐 Allowed Origins:', allowedOrigins);
 
-server.use(
-  cors({
-    origin: (origin, callback) => {
-      console.log('🔍 CORS check - Request from origin:', origin);
-      console.log('🔍 CORS check - Allowed origins:', allowedOrigins);
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    console.log('🔍 CORS check - origin:', origin);
 
-      // Разрешаем запросы без origin (например, Postman, curl)
-      if (!origin) {
-        console.log('✅ No origin - allowing request');
-        return callback(null, true);
-      }
+    if (!origin) {
+      console.log('✅ No origin - allowing');
+      return callback(null, true);
+    }
 
-      // Проверяем, есть ли origin в списке разрешённых
-      if (allowedOrigins.includes(origin)) {
-        console.log('✅ Origin allowed:', origin);
-        callback(null, true);
-      } else {
-        console.log('❌ Origin blocked:', origin);
-        console.log('💡 Add this origin to FRONTEND_URL:', origin);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
-);
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ Origin allowed:', origin);
+      return callback(null, true);
+    }
 
-// Важно: добавьте обработку preflight запросов ПЕРЕД другими middleware
-server.options('*', cors());
+    console.log('❌ Origin blocked:', origin);
+    console.log('💡 Expected one of:', allowedOrigins);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Set-Cookie'], // ← ДОБАВЬТЕ ЭТО
+  maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+server.use(cors(corsOptions));
+server.options('*', cors(corsOptions));
 
 // Logging
 if (process.env.NODE_ENV === 'production') {

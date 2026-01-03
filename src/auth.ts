@@ -1,4 +1,3 @@
-// ============ auth.ts ============
 import jwt from 'jsonwebtoken';
 import { Request, Response, CookieOptions } from 'express';
 
@@ -31,7 +30,6 @@ export function authorizeToken(token: string): string | undefined {
 }
 
 export function authorizeRequest(request: Request): string | undefined {
-  // Добавим логирование для отладки
   console.log('🔍 Checking auth cookie:', {
     hasCookie: !!request.cookies.auth,
     cookieValue: request.cookies.auth ? 'exists' : 'missing',
@@ -52,12 +50,13 @@ export function authorizeRequest(request: Request): string | undefined {
 
 export function authorizeResponse(response: Response, userId: string): Response {
   const isProduction = process.env.NODE_ENV === 'production';
+  const token = createToken(userId);
 
   const cookieOptions: CookieOptions = {
     httpOnly: true,
-    secure: isProduction, // true только в production (HTTPS)
-    sameSite: isProduction ? 'none' : 'lax', // 'none' для cross-origin в production
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/',
   };
 
@@ -65,9 +64,17 @@ export function authorizeResponse(response: Response, userId: string): Response 
     isProduction,
     secure: cookieOptions.secure,
     sameSite: cookieOptions.sameSite,
+    token: token.substring(0, 20) + '...',
   });
 
-  return response.cookie('auth', createToken(userId), cookieOptions);
+  // КРИТИЧЕСКИ ВАЖНО: устанавливаем cookie через response.cookie
+  response.cookie('auth', token, cookieOptions);
+
+  // Для отладки - проверяем, установился ли заголовок
+  const setCookieHeader = response.getHeader('Set-Cookie');
+  console.log('🔍 Set-Cookie header after setting:', setCookieHeader);
+
+  return response;
 }
 
 export function unauthorizeResponse(response: Response): Response {
