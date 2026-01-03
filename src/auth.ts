@@ -42,16 +42,16 @@ export function authorizeRequest(request: Request): string | undefined {
 export function authorizeResponse(response: Response, userId: string): Response {
   return response.cookie('auth', createToken(userId), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // HTTPS в продакшене
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+    secure: true, // Всегда true на production
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // ВАЖНО!
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 
 export function unauthorizeResponse(response: Response): Response {
   return response.clearCookie('auth', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: true,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 }

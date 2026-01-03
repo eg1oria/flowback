@@ -89,9 +89,22 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
   : ['http://localhost:3000'];
 
+console.log('🌐 Allowed Origins:', allowedOrigins);
+
 server.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      console.log('🔍 Request from origin:', origin); // Добавьте это
+
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log('❌ Origin blocked:', origin); // Добавьте это
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
