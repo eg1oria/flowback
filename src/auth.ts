@@ -9,7 +9,7 @@ export function createToken(userId: string): string {
       userId,
     },
     JWT_SECRET,
-    { expiresIn: '7d' }, // Токен действителен 7 дней
+    { expiresIn: '7d' },
   );
 }
 
@@ -40,18 +40,24 @@ export function authorizeRequest(request: Request): string | undefined {
 }
 
 export function authorizeResponse(response: Response, userId: string): Response {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   return response.cookie('auth', createToken(userId), {
     httpOnly: true,
-    secure: true, // Всегда true на production
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // ВАЖНО!
+    secure: isProduction, // HTTPS обязателен для production
+    sameSite: isProduction ? 'none' : 'lax', // 'none' для cross-origin
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: '/', // Явно указываем путь
   });
 }
 
 export function unauthorizeResponse(response: Response): Response {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   return response.clearCookie('auth', {
     httpOnly: true,
-    secure: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
   });
 }

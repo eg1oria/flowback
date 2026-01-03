@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 
-import { authorizeRequest } from '../auth.js';
+import { authorizeRequest, unauthorizeResponse } from '../auth.js';
 import { Cart, Users } from '../database/index.js';
 
 export const usersRouter = Router();
@@ -74,14 +74,9 @@ usersRouter.delete('/me', async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      path: '/',
-    });
-
-    res.status(200).json({ message: 'Аккаунт и корзина успешно удалены' });
+    // Используем функцию unauthorizeResponse из auth.js
+    // Она автоматически применит правильные настройки cookie
+    unauthorizeResponse(res).status(200).json({ message: 'Аккаунт и корзина успешно удалены' });
   } catch (error) {
     console.error('DELETE USER ERROR:', error);
     res.status(500).json({ error: 'Ошибка сервера' });

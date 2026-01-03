@@ -27,6 +27,46 @@ const CheckoutSchema = z.object({
   postCardText: z.string(),
 });
 
+cartRouter.post('/add', async (req: Request, res: Response): Promise<void> => {
+  try {
+    // DEBUG: Логируем все cookies и headers
+    console.log('🍪 Cookies:', req.cookies);
+    console.log('📨 Headers:', {
+      origin: req.headers.origin,
+      cookie: req.headers.cookie,
+      'content-type': req.headers['content-type'],
+    });
+
+    const userId = authorizeRequest(req);
+
+    console.log('👤 UserId from token:', userId);
+
+    if (!userId) {
+      console.log('❌ No userId - returning 401');
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const parseResult = AddItemSchema.safeParse(req.body);
+
+    if (!parseResult.success) {
+      res.status(400).json({
+        error: parseResult.error.issues[0].message,
+      });
+      return;
+    }
+
+    const { productId, name, price, image, count } = parseResult.data;
+
+    const item = await Cart.addItem(userId, productId, name, price, image, count);
+    console.log('✅ Item added successfully');
+    res.status(201).json(item);
+  } catch (error) {
+    console.error('ADD cart error:', error);
+    res.status(500).json({ error: 'Ошибка при добавлении товара' });
+  }
+});
+
 cartRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = authorizeRequest(req);
@@ -48,34 +88,6 @@ cartRouter.get('/', async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error('GET cart error:', error);
     res.status(500).json({ error: 'Ошибка при получении корзины' });
-  }
-});
-
-cartRouter.post('/add', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const userId = authorizeRequest(req);
-
-    if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const parseResult = AddItemSchema.safeParse(req.body);
-
-    if (!parseResult.success) {
-      res.status(400).json({
-        error: parseResult.error.issues[0].message,
-      });
-      return;
-    }
-
-    const { productId, name, price, image, count } = parseResult.data;
-
-    const item = await Cart.addItem(userId, productId, name, price, image, count);
-    res.status(201).json(item);
-  } catch (error) {
-    console.error('ADD cart error:', error);
-    res.status(500).json({ error: 'Ошибка при добавлении товара' });
   }
 });
 
