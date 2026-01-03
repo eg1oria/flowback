@@ -9,17 +9,11 @@ import mongoSanitize from 'express-mongo-sanitize';
 import morgan from 'morgan';
 import { z } from 'zod';
 import fetch from 'node-fetch';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
 import { usersRouter, authRouter, cartRouter } from './routes/index.js';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const require = createRequire(import.meta.url);
 const flowersData = require('../db.json');
@@ -47,7 +41,6 @@ const contactSchema = z.object({
   message: z.string().min(5, 'Сообщение слишком короткое').max(1000),
 });
 
-// Trust proxy for deployment (Heroku, Railway, Render, etc.)
 server.set('trust proxy', 1);
 
 const generalLimiter = rateLimit({
@@ -84,8 +77,6 @@ server.use(json({ limit: '10kb' }));
 server.use(mongoSanitize());
 server.use(cookieParser());
 
-// После helmet, json, mongoSanitize, cookieParser
-
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
   : ['http://localhost:3000'];
@@ -113,7 +104,7 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Set-Cookie'], // ← ДОБАВЬТЕ ЭТО
+  exposedHeaders: ['Set-Cookie'],
   maxAge: 86400,
   preflightContinue: false,
   optionsSuccessStatus: 204,
@@ -185,14 +176,9 @@ ${email ? `Email: ${escapeHtml(email)}` : 'Email: Не указано'}
   }
 });
 
-// API Routes
-console.log('📍 Registering routes...');
 server.use('/users', usersRouter);
-console.log('✅ /users registered');
 server.use('/auth', authRouter);
-console.log('✅ /auth registered');
 server.use('/cart', cartRouter);
-console.log('✅ /cart registered');
 
 server.get('/flowers', (_req: Request, res: Response): void => {
   res.json(flowersData.flowers);
@@ -215,51 +201,6 @@ server.get('/flowers/:id', (req: Request, res: Response): void => {
   res.json(flower);
 });
 
-server.patch('/flowers/:id', async (req: Request, res: Response): Promise<void> => {
-  try {
-    if (!/^\d+$/.test(req.params.id)) {
-      res.status(400).json({ error: 'Invalid ID format' });
-      return;
-    }
-
-    const id = Number(req.params.id);
-    const { rating } = req.body;
-
-    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
-      res.status(400).json({ error: 'Рейтинг должен быть числом от 1 до 5' });
-      return;
-    }
-
-    const flowerIndex = flowersData.flowers.findIndex((f: any) => f.id === id);
-
-    if (flowerIndex === -1) {
-      res.status(404).json({ error: 'Цветок не найден' });
-      return;
-    }
-
-    // Update rating logic
-    const flower = flowersData.flowers[flowerIndex];
-    const currentRating = flower.rating || 0;
-    const ratingCount = flower.ratingCount || 0;
-
-    flower.ratingCount = ratingCount + 1;
-    flower.rating = (currentRating * ratingCount + rating) / flower.ratingCount;
-
-    // Save to file
-    const dbPath = path.join(__dirname, '..', 'db.json');
-    await fs.writeFile(dbPath, JSON.stringify(flowersData, null, 2), 'utf-8');
-
-    res.json({
-      success: true,
-      flower: flowersData.flowers[flowerIndex],
-    });
-  } catch (error) {
-    console.error('ERROR updating rating:', error);
-    res.status(500).json({ error: 'Ошибка при обновлении рейтинга' });
-  }
-});
-
-// Health check endpoint
 server.get('/health', (_req: Request, res: Response): void => {
   res.status(200).json({
     status: 'OK',
@@ -269,7 +210,6 @@ server.get('/health', (_req: Request, res: Response): void => {
   });
 });
 
-// Root endpoint
 server.get('/', (_req: Request, res: Response): void => {
   res.json({
     message: 'Flower Shop API',
@@ -285,12 +225,10 @@ server.get('/', (_req: Request, res: Response): void => {
   });
 });
 
-// 404 handler
 server.use((_req: Request, res: Response): void => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Global error handler
 server.use((err: any, _req: Request, res: Response, _next: NextFunction): void => {
   console.error('Error:', err);
   const status = err.status || 500;
@@ -301,7 +239,6 @@ server.use((err: any, _req: Request, res: Response, _next: NextFunction): void =
   });
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received: closing HTTP server');
   process.exit(0);
@@ -312,7 +249,6 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-// Start server
 server.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
   console.log(`📍 http://localhost:${PORT}`);
