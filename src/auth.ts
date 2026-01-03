@@ -30,6 +30,20 @@ export function authorizeToken(token: string): string | undefined {
 }
 
 export function authorizeRequest(request: Request): string | undefined {
+  // Сначала пробуем Authorization header
+  const authHeader = request.headers.authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    console.log('🔍 Found Bearer token in Authorization header');
+    const userId = authorizeToken(token);
+    if (userId) {
+      console.log('✅ Token valid, userId:', userId);
+      return userId;
+    }
+  }
+
+  // Если нет header, пробуем cookie
   console.log('🔍 Checking auth cookie:', {
     hasCookie: !!request.cookies.auth,
     cookieValue: request.cookies.auth ? 'exists' : 'missing',
@@ -40,11 +54,11 @@ export function authorizeRequest(request: Request): string | undefined {
 
   if (typeof token === 'string') {
     const userId = authorizeToken(token);
-    console.log('🔍 Token decoded:', userId ? 'valid' : 'invalid');
+    console.log('🔍 Token from cookie:', userId ? 'valid' : 'invalid');
     return userId;
   }
 
-  console.log('❌ No auth token found in cookies');
+  console.log('❌ No auth token found');
   return undefined;
 }
 
@@ -64,17 +78,17 @@ export function authorizeResponse(response: Response, userId: string): Response 
     isProduction,
     secure: cookieOptions.secure,
     sameSite: cookieOptions.sameSite,
-    token: token.substring(0, 20) + '...',
   });
 
-  // КРИТИЧЕСКИ ВАЖНО: устанавливаем cookie через response.cookie
   response.cookie('auth', token, cookieOptions);
 
-  // Для отладки - проверяем, установился ли заголовок
-  const setCookieHeader = response.getHeader('Set-Cookie');
-  console.log('🔍 Set-Cookie header after setting:', setCookieHeader);
-
+  // ДОБАВЛЯЕМ: отправляем токен также в теле ответа
   return response;
+}
+
+// Новая функция для получения токена
+export function getTokenForResponse(userId: string): string {
+  return createToken(userId);
 }
 
 export function unauthorizeResponse(response: Response): Response {

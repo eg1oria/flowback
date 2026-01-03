@@ -1,8 +1,12 @@
-// ============ auth.routes.ts ============
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 
-import { authorizeResponse, unauthorizeResponse, authorizeRequest } from '../auth.js';
+import {
+  authorizeResponse,
+  unauthorizeResponse,
+  authorizeRequest,
+  getTokenForResponse,
+} from '../auth.js';
 import { IUser, Users, Passwords } from '../database/index.js';
 
 export const authRouter = Router();
@@ -47,6 +51,8 @@ authRouter.post('/register', async (req: Request, res: Response): Promise<void> 
 
   console.log('✅ User registered successfully:', user.id);
 
+  const token = getTokenForResponse(user.id);
+
   authorizeResponse(res, user.id)
     .status(201)
     .json({
@@ -55,6 +61,7 @@ authRouter.post('/register', async (req: Request, res: Response): Promise<void> 
         username: user.username,
         email: user.email,
       },
+      token, // ← ДОБАВЛЯЕМ ТОКЕН
     });
 });
 
@@ -84,6 +91,8 @@ authRouter.post('/login', (req: Request, res: Response): void => {
 
   console.log('✅ User logged in successfully:', user.id);
 
+  const token = getTokenForResponse(user.id);
+
   authorizeResponse(res, user.id)
     .status(200)
     .json({
@@ -92,6 +101,7 @@ authRouter.post('/login', (req: Request, res: Response): void => {
         username: user.username,
         email: user.email,
       },
+      token, // ← ДОБАВЛЯЕМ ТОКЕН
     });
 });
 
