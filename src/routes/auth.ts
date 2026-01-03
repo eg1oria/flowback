@@ -1,3 +1,4 @@
+// ============ auth.routes.ts ============
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 
@@ -18,6 +19,8 @@ const LoginSchema = z.object({
 });
 
 authRouter.post('/register', async (req: Request, res: Response): Promise<void> => {
+  console.log('📝 Registration attempt:', { email: req.body.email });
+
   const bodyParseResult = RegisterSchema.safeParse(req.body);
 
   if (!bodyParseResult.success) {
@@ -42,6 +45,8 @@ authRouter.post('/register', async (req: Request, res: Response): Promise<void> 
 
   await Passwords.create(user.id, password);
 
+  console.log('✅ User registered successfully:', user.id);
+
   authorizeResponse(res, user.id)
     .status(201)
     .json({
@@ -54,6 +59,8 @@ authRouter.post('/register', async (req: Request, res: Response): Promise<void> 
 });
 
 authRouter.post('/login', (req: Request, res: Response): void => {
+  console.log('🔐 Login attempt:', { email: req.body.email });
+
   const bodyParseResult = LoginSchema.safeParse(req.body);
 
   if (!bodyParseResult.success) {
@@ -68,11 +75,14 @@ authRouter.post('/login', (req: Request, res: Response): void => {
   const user = Users.findOne((user) => user.email === email);
 
   if (!user || !Passwords.verify(user.id, password)) {
+    console.log('❌ Login failed: invalid credentials');
     res.status(401).json({
       error: 'Неверный email или пароль',
     });
     return;
   }
+
+  console.log('✅ User logged in successfully:', user.id);
 
   authorizeResponse(res, user.id)
     .status(200)
@@ -86,15 +96,20 @@ authRouter.post('/login', (req: Request, res: Response): void => {
 });
 
 authRouter.post('/logout', (_req: Request, res: Response): void => {
+  console.log('👋 User logging out');
+
   unauthorizeResponse(res).status(200).json({
     message: 'Вы успешно вышли из системы',
   });
 });
 
 authRouter.get('/check', (req: Request, res: Response): void => {
+  console.log('🔍 Auth check request');
+
   const userId = authorizeRequest(req);
 
   if (!userId) {
+    console.log('❌ Not authenticated');
     res.status(401).json({
       isAuthenticated: false,
     });
@@ -104,11 +119,14 @@ authRouter.get('/check', (req: Request, res: Response): void => {
   const user = Users.getOne(userId);
 
   if (!user) {
+    console.log('❌ User not found in database');
     res.status(404).json({
       isAuthenticated: false,
     });
     return;
   }
+
+  console.log('✅ User authenticated:', user.id);
 
   res.status(200).json({
     isAuthenticated: true,

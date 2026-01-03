@@ -1,5 +1,6 @@
+// ============ auth.ts ============
 import jwt from 'jsonwebtoken';
-import { Request, Response } from 'express';
+import { Request, Response, CookieOptions } from 'express';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
@@ -30,30 +31,50 @@ export function authorizeToken(token: string): string | undefined {
 }
 
 export function authorizeRequest(request: Request): string | undefined {
+  // Добавим логирование для отладки
+  console.log('🔍 Checking auth cookie:', {
+    hasCookie: !!request.cookies.auth,
+    cookieValue: request.cookies.auth ? 'exists' : 'missing',
+    allCookies: Object.keys(request.cookies),
+  });
+
   const token = request.cookies.auth;
 
   if (typeof token === 'string') {
-    return authorizeToken(token);
+    const userId = authorizeToken(token);
+    console.log('🔍 Token decoded:', userId ? 'valid' : 'invalid');
+    return userId;
   }
 
+  console.log('❌ No auth token found in cookies');
   return undefined;
 }
 
 export function authorizeResponse(response: Response, userId: string): Response {
   const isProduction = process.env.NODE_ENV === 'production';
-  
-  return response.cookie('auth', createToken(userId), {
+
+  const cookieOptions: CookieOptions = {
     httpOnly: true,
-    secure: isProduction, // HTTPS обязателен для production
-    sameSite: isProduction ? 'none' : 'lax', // 'none' для cross-origin
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: '/', // Явно указываем путь
+    secure: isProduction, // true только в production (HTTPS)
+    sameSite: isProduction ? 'none' : 'lax', // 'none' для cross-origin в production
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+    path: '/',
+  };
+
+  console.log('🍪 Setting cookie with options:', {
+    isProduction,
+    secure: cookieOptions.secure,
+    sameSite: cookieOptions.sameSite,
   });
+
+  return response.cookie('auth', createToken(userId), cookieOptions);
 }
 
 export function unauthorizeResponse(response: Response): Response {
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
+  console.log('🗑️ Clearing cookie');
+
   return response.clearCookie('auth', {
     httpOnly: true,
     secure: isProduction,
