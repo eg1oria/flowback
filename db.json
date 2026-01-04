@@ -5,7 +5,7 @@
       "name": "Mono Mood",
       "price": 2500,
       "discount": 0.1,
-      "image": "/img/flowers/flower1.jpg",
+      "image": "/img/flowers/flower34.jpg",
       "description": "Красная роза символизирует любовь и страсть.",
       "count": 4,
       "type": "Розы"
@@ -15,7 +15,7 @@
       "name": "Pure Line",
       "price": 2300,
       "discount": 0.1,
-      "image": "/img/flowers/flower.jpg",
+      "image": "/img/flowers/flower35.jpg",
       "description": "Яркий тюльпан приносит радость и весеннее настроение.",
       "count": 3,
       "type": "Тюльпаны"
@@ -25,7 +25,7 @@
       "name": "Minimal Bloom",
       "price": 3200,
       "discount": 0.1,
-      "image": "/img/flowers/flower3.jpg",
+      "image": "/img/flowers/flower36.jpg",
       "description": "Элегантная лилия олицетворяет чистоту и изящество.",
       "count": 5,
       "type": "Розы"
@@ -95,7 +95,7 @@
       "name": "Garden Fresh",
       "price": 3100,
       "discount": 0.1,
-      "image": "/img/flowers/flower11.jpg",
+      "image": "/img/flowers/flower37.jpg",
       "description": "Свежий букет из сезонных цветов — идеальный подарок на любой случай.",
       "count": 0,
       "type": "Розы"
@@ -125,7 +125,7 @@
       "name": "Morning Whisper",
       "price": 2400,
       "discount": 0.1,
-      "image": "/img/flowers/flower14.jpg",
+      "image": "/img/flowers/flower38.jpg",
       "description": "Нежный букет из лавандовых роз и эвкалипта пробуждает лёгкость утра.",
       "count": 5,
       "type": "Ирисы"
@@ -145,7 +145,7 @@
       "name": "Lime Breeze",
       "price": 2600,
       "discount": 0.1,
-      "image": "/img/flowers/flower15.jpg",
+      "image": "/img/flowers/flower39.jpg",
       "description": "Свежий и сочный букет для тех, кто любит жизнь во всех её красках.",
       "count": 6,
       "type": "Ирисы"
@@ -175,7 +175,7 @@
       "name": "Pastel Love",
       "price": 3100,
       "discount": 0.1,
-      "image": "/img/flowers/flower18.jpg",
+      "image": "/img/flowers/flower40.jpg",
       "description": "Нежные оттенки розового и кремового — для самых романтичных моментов.",
       "count": 3,
       "type": "Ирисы"
@@ -215,7 +215,7 @@
       "name": "Sweet Aroma",
       "price": 2500,
       "discount": 0.1,
-      "image": "/img/flowers/flower22.jpg",
+      "image": "/img/flowers/flower41.jpg",
       "description": "Тюльпаны и фрезии создают аромат весны в каждой комнате.",
       "count": 5,
       "type": "Пионы"
