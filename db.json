@@ -8,7 +8,8 @@
       "image": "/img/flowers/flower34.png",
       "description": "Красная роза символизирует любовь и страсть.",
       "count": 4,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "романтические"
     },
     {
       "id": 2,
@@ -18,7 +19,8 @@
       "image": "/img/flowers/flower35.png",
       "description": "Яркий тюльпан приносит радость и весеннее настроение.",
       "count": 3,
-      "type": "Тюльпаны"
+      "type": "Тюльпаны",
+      "searchQuery": "свадебные"
     },
     {
       "id": 3,
@@ -28,7 +30,8 @@
       "image": "/img/flowers/flower36.png",
       "description": "Элегантная лилия олицетворяет чистоту и изящество.",
       "count": 5,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "авторские"
     },
     {
       "id": 4,
@@ -38,7 +41,8 @@
       "image": "/img/flowers/flower5.jpg",
       "description": "Пышные пионы создают атмосферу уюта и роскоши.",
       "count": 0,
-      "type": "Лилии"
+      "type": "Лилии",
+      "searchQuery": "день рождения"
     },
     {
       "id": 5,
@@ -48,7 +52,8 @@
       "image": "/img/flowers/flower6.jpg",
       "description": "Контрастный букет в современном стиле — гармония города и природы.",
       "count": 3,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "мужские"
     },
     {
       "id": 6,
@@ -58,7 +63,8 @@
       "image": "/img/flowers/flower7.jpg",
       "description": "Нежные хризантемы и эвкалипт дарят спокойствие и лёгкость.",
       "count": 3,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "авторские"
     },
     {
       "id": 7,
@@ -68,7 +74,8 @@
       "image": "/img/flowers/flower8.jpg",
       "description": "Жёлтые герберы символизируют радость и дружбу.",
       "count": 0,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "свадебные"
     },
     {
       "id": 8,
@@ -78,7 +85,8 @@
       "image": "/img/flowers/flower9.jpg",
       "description": "Оранжевые розы выражают восхищение и энтузиазм.",
       "count": 9,
-      "type": "Подсолнухи"
+      "type": "Подсолнухи",
+      "searchQuery": "день рождения"
     },
     {
       "id": 9,
@@ -88,7 +96,8 @@
       "image": "/img/flowers/flower10.jpg",
       "description": "Белые ромашки символизируют невинность и чистоту.",
       "count": 5,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "день рождения"
     },
     {
       "id": 10,
@@ -98,7 +107,8 @@
       "image": "/img/flowers/flower37.png",
       "description": "Свежий букет из сезонных цветов — идеальный подарок на любой случай.",
       "count": 0,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "авторские"
     },
     {
       "id": 11,
@@ -108,7 +118,8 @@
       "image": "/img/flowers/flower12.jpg",
       "description": "Розовые тюльпаны символизируют заботу и нежность.",
       "count": 6,
-      "type": "Ирисы"
+      "type": "Ирисы",
+      "searchQuery": "романтические"
     },
     {
       "id": 12,
@@ -118,7 +129,8 @@
       "image": "/img/flowers/flower13.jpg",
       "description": "Королевские орхидеи олицетворяют роскошь и изысканность.",
       "count": 4,
-      "type": "Тюльпаны"
+      "type": "Тюльпаны",
+      "searchQuery": "свадебные"
     },
     {
       "id": 13,
@@ -128,7 +140,8 @@
       "image": "/img/flowers/flower38.png",
       "description": "Нежный букет из лавандовых роз и эвкалипта пробуждает лёгкость утра.",
       "count": 5,
-      "type": "Ирисы"
+      "type": "Ирисы",
+      "searchQuery": "свадебные"
     },
     {
       "id": 14,
@@ -138,7 +151,8 @@
       "image": "/img/flowers/flower2.jpg",
       "description": "Глубокий красный оттенок говорит больше, чем слова.",
       "count": 3,
-      "type": "Подсолнухи"
+      "type": "Подсолнухи",
+      "searchQuery": "день рождения"
     },
     {
       "id": 15,
@@ -148,7 +162,8 @@
       "image": "/img/flowers/flower39.png",
       "description": "Свежий и сочный букет для тех, кто любит жизнь во всех её красках.",
       "count": 6,
-      "type": "Ирисы"
+      "type": "Ирисы",
+      "searchQuery": "мужские"
     },
     {
       "id": 16,
@@ -158,7 +173,8 @@
       "image": "/img/flowers/flower16.jpg",
       "description": "Тёплые оттенки жёлтого создают ощущение летнего заката.",
       "count": 8,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "день рождения"
     },
     {
       "id": 17,
@@ -168,7 +184,8 @@
       "image": "/img/flowers/flower17.jpg",
       "description": "Светлый букет с орхидеями и лилиями — символ нежности.",
       "count": 5,
-      "type": "Лилии"
+      "type": "Лилии",
+      "searchQuery": "свадебные"
     },
     {
       "id": 18,
@@ -178,7 +195,8 @@
       "image": "/img/flowers/flower40.png",
       "description": "Нежные оттенки розового и кремового — для самых романтичных моментов.",
       "count": 3,
-      "type": "Ирисы"
+      "type": "Ирисы",
+      "searchQuery": "авторские"
     },
     {
       "id": 19,
@@ -188,7 +206,8 @@
       "image": "/img/flowers/flower19.jpg",
       "description": "Ягодные тона и аромат лаванды — страсть в каждом лепестке.",
       "count": 4,
-      "type": "Лилии"
+      "type": "Лилии",
+      "searchQuery": "романтические"
     },
     {
       "id": 20,
@@ -198,7 +217,8 @@
       "image": "/img/flowers/flower20.jpg",
       "description": "Белоснежные розы и гортензии — элегантная классика.",
       "count": 0,
-      "type": "Пионы"
+      "type": "Пионы",
+      "searchQuery": "мужские"
     },
     {
       "id": 21,
@@ -208,7 +228,8 @@
       "image": "/img/flowers/flower21.jpg",
       "description": "Оранжевые и розовые тона, словно рассвет над садом.",
       "count": 9,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "свадебные"
     },
     {
       "id": 22,
@@ -218,7 +239,8 @@
       "image": "/img/flowers/flower41.png",
       "description": "Тюльпаны и фрезии создают аромат весны в каждой комнате.",
       "count": 5,
-      "type": "Пионы"
+      "type": "Пионы",
+      "searchQuery": "день рождения"
     },
     {
       "id": 23,
@@ -228,7 +250,8 @@
       "image": "/img/flowers/flower23.jpg",
       "description": "Яркий янтарный букет с герберами и подсолнухами.",
       "count": 4,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "мужские"
     },
     {
       "id": 24,
@@ -238,7 +261,8 @@
       "image": "/img/flowers/flower24.jpg",
       "description": "Королевская композиция из орхидей и роз.",
       "count": 0,
-      "type": "Тюльпаны"
+      "type": "Тюльпаны",
+      "searchQuery": "романтические"
     },
     {
       "id": 25,
@@ -248,7 +272,8 @@
       "image": "/img/flowers/flower25.jpg",
       "description": "Голубые ирисы и белые лилии создают ощущение лёгкости.",
       "count": 4,
-      "type": "Тюльпаны"
+      "type": "Тюльпаны",
+      "searchQuery": "романтические"
     },
     {
       "id": 26,
@@ -258,7 +283,8 @@
       "image": "/img/flowers/flower26.jpg",
       "description": "Коралловые пионы и кремовые розы — нежность и тепло.",
       "count": 6,
-      "type": "Подсолнухи"
+      "type": "Подсолнухи",
+      "searchQuery": "авторские"
     },
     {
       "id": 27,
@@ -268,7 +294,8 @@
       "image": "/img/flowers/flower27.jpg",
       "description": "Пышный букет в бордовых и алых тонах — для особых случаев.",
       "count": 3,
-      "type": "Лилии"
+      "type": "Лилии",
+      "searchQuery": "романтические"
     },
     {
       "id": 28,
@@ -278,7 +305,8 @@
       "image": "/img/flowers/flower28.jpg",
       "description": "Сиреневые тона и аромат лаванды переносят в Прованс.",
       "count": 0,
-      "type": "Подсолнухи"
+      "type": "Подсолнухи",
+      "searchQuery": "свадебные"
     },
     {
       "id": 29,
@@ -288,7 +316,8 @@
       "image": "/img/flowers/flower29.jpg",
       "description": "Воздушная композиция с белыми пионами и эвкалиптом.",
       "count": 4,
-      "type": "Ирисы"
+      "type": "Ирисы",
+      "searchQuery": "день рождения"
     },
     {
       "id": 30,
@@ -298,7 +327,8 @@
       "image": "/img/flowers/flower30.jpg",
       "description": "Осенние оттенки с сухоцветами — уют и тепло в каждом букете.",
       "count": 5,
-      "type": "Пионы"
+      "type": "Пионы",
+      "searchQuery": "авторские"
     },
     {
       "id": 31,
@@ -308,7 +338,8 @@
       "image": "/img/flowers/flower31.jpg",
       "description": "Пастельные розы и гвоздики, как облако из сладкой ваты.",
       "count": 8,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "романтические"
     },
     {
       "id": 32,
@@ -318,7 +349,8 @@
       "image": "/img/flowers/flower32.jpg",
       "description": "Букет с лёгкой дымкой из роз и лаванды.",
       "count": 6,
-      "type": "Розы"
+      "type": "Розы",
+      "searchQuery": "день рождения"
     },
     {
       "id": 33,
@@ -328,7 +360,8 @@
       "image": "/img/flowers/flower33.jpg",
       "description": "Свежий букет с нотками цитрусовых и зелени.",
       "count": 0,
-      "type": "Лилии"
+      "type": "Лилии",
+      "searchQuery": "мужские"
     }
   ]
 }
