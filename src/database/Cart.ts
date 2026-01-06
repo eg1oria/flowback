@@ -2,8 +2,8 @@ import { randomUUID } from 'crypto';
 import { JSONFilePreset } from 'lowdb/node';
 
 export interface ICartItem {
-  id: string; // уникальный ID элемента корзины
-  productId: string; // ID товара из магазина
+  id: string;
+  productId: string;
   name: string;
   price: number;
   image: string;
@@ -18,7 +18,7 @@ export class Cart {
   static getAllForUser(userId: string): ICartItem[] {
     return Object.values(database.data)
       .filter((item) => item.userId === userId)
-      .sort((a, b) => b.createdAt - a.createdAt); // Новые сначала
+      .sort((a, b) => b.createdAt - a.createdAt);
   }
 
   static getOne(itemId: string): ICartItem | undefined {

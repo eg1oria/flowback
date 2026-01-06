@@ -1,4 +1,3 @@
-// ============ server.ts ============
 import express, { json, Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -20,19 +19,17 @@ const flowersData = require('../db.json');
 
 const server = express();
 const PORT = process.env.PORT || 4000;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
-function escapeHtml(text: string): string {
-  return text
+const escapeHtml = (text: string): string =>
+  text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
-}
 
-function sanitizePhone(phone: string): string {
-  return phone.replace(/[^\d+]/g, '');
-}
+const sanitizePhone = (phone: string): string => phone.replace(/[^\d+]/g, '');
 
 const contactSchema = z.object({
   name: z.string().max(50).optional(),
@@ -44,7 +41,7 @@ const contactSchema = z.object({
 server.set('trust proxy', 1);
 
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 900000,
   max: 100,
   message: 'Слишком много запросов с вашего IP, попробуйте позже',
   standardHeaders: true,
@@ -52,7 +49,7 @@ const generalLimiter = rateLimit({
 });
 
 const contactLimiter = rateLimit({
-  windowMs: 60 * 1000,
+  windowMs: 60000,
   max: 5,
   message: 'Слишком много запросов, попробуйте позже',
   standardHeaders: true,
@@ -81,24 +78,11 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
   : ['http://localhost:3000'];
 
-console.log('🌐 Allowed Origins:', allowedOrigins);
-
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    console.log('🔍 CORS check - origin:', origin);
-
-    if (!origin) {
-      console.log('✅ No origin - allowing');
+    if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-
-    if (allowedOrigins.includes(origin)) {
-      console.log('✅ Origin allowed:', origin);
-      return callback(null, true);
-    }
-
-    console.log('❌ Origin blocked:', origin);
-    console.log('💡 Expected one of:', allowedOrigins);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -113,13 +97,7 @@ const corsOptions = {
 server.use(cors(corsOptions));
 server.options('*', cors(corsOptions));
 
-// Logging
-if (process.env.NODE_ENV === 'production') {
-  server.use(morgan('combined'));
-} else {
-  server.use(morgan('dev'));
-}
-
+server.use(IS_PROD ? morgan('combined') : morgan('dev'));
 server.use(generalLimiter);
 
 interface TelegramResponse {
@@ -171,7 +149,6 @@ ${email ? `Email: ${escapeHtml(email)}` : 'Email: Не указано'}
 
     res.json({ ok: true });
   } catch (error) {
-    console.error('CONTACT FORM ERROR:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -202,7 +179,7 @@ server.get('/flowers/:id', (req: Request, res: Response): void => {
 });
 
 server.get('/health', (_req: Request, res: Response): void => {
-  res.status(200).json({
+  res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
@@ -230,31 +207,25 @@ server.use((_req: Request, res: Response): void => {
 });
 
 server.use((err: any, _req: Request, res: Response, _next: NextFunction): void => {
-  console.error('Error:', err);
   const status = err.status || 500;
   const message = err.message || 'Internal server error';
   res.status(status).json({
     error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(!IS_PROD && { stack: err.stack }),
   });
 });
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
+const shutdown = () => {
   process.exit(0);
-});
+};
 
-process.on('SIGINT', () => {
-  console.log('SIGINT signal received: closing HTTP server');
-  process.exit(0);
-});
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 server.listen(PORT, () => {
-  console.log(`🚀 Server started on port ${PORT}`);
-  console.log(`📍 http://localhost:${PORT}`);
-  console.log('🔒 Security: Helmet, Rate Limiting, CORS enabled');
+  console.log(`🚀 Server: http://localhost:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Allowed Origins: ${allowedOrigins.join(', ')}`);
+  console.log(`🌐 Origins: ${allowedOrigins.join(', ')}`);
 });
 
 export default server;
