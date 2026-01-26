@@ -224,6 +224,64 @@ server.get('/flowers/search', (req: Request, res: Response): void => {
   });
 });
 
+// Поиск цветов
+server.get('/flowers/search', (req: Request, res: Response): void => {
+  const query = req.query.q as string;
+  const type = req.query.type as string;
+  const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
+  const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
+  const topSales = req.query.topSales === 'true';
+
+  let results = flowersData.flowers;
+
+  // Фильтр по поисковому запросу
+  if (query && query.trim()) {
+    const normalizedQuery = normalizeString(query);
+    const searchTerms = normalizedQuery.split(' ');
+
+    results = results.filter((flower: any) => {
+      const searchableText = normalizeString(
+        `${flower.name} ${flower.type} ${flower.description || ''} ${flower.searchQuery || ''}`, // добавлено searchQuery
+      );
+
+      return searchTerms.every((term: string) => searchableText.includes(term));
+    });
+  }
+
+  // Фильтр по типу
+  if (type && type !== 'null' && type !== 'Все') {
+    // добавлена проверка на 'Все'
+    results = results.filter((flower: any) => flower.type === type);
+  }
+
+  // Фильтр по цене
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    results = results.filter((flower: any) => {
+      const finalPrice = Math.round(flower.price * (1 - flower.discount));
+      if (minPrice !== undefined && finalPrice < minPrice) return false;
+      if (maxPrice !== undefined && finalPrice > maxPrice) return false;
+      return true;
+    });
+  }
+
+  // Фильтр топ продаж
+  if (topSales) {
+    results = results.filter((flower: any) => flower.discount > 0.1);
+  }
+
+  res.json({
+    results,
+    total: results.length,
+    query: {
+      q: query || null,
+      type: type || null,
+      minPrice: minPrice || null,
+      maxPrice: maxPrice || null,
+      topSales,
+    },
+  });
+});
+
 // Получить цветок по ID
 server.get('/flowers/:id', (req: Request, res: Response): void => {
   if (!/^\d+$/.test(req.params.id)) {
