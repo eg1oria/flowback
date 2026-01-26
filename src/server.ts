@@ -167,122 +167,56 @@ server.get('/flowers', (_req: Request, res: Response): void => {
   res.json(flowersData.flowers);
 });
 
-// Поиск цветов
+// Исправленный роут поиска в server.ts
 server.get('/flowers/search', (req: Request, res: Response): void => {
-  const query = req.query.q as string;
-  const type = req.query.type as string;
-  const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
-  const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
-  const topSales = req.query.topSales === 'true';
+  const { q, type, minPrice, maxPrice, topSales } = req.query;
 
-  let results = flowersData.flowers;
+  let results = [...flowersData.flowers];
 
-  // Фильтр по поисковому запросу
-  if (query && query.trim()) {
-    const normalizedQuery = normalizeString(query);
+  // 1. Поиск по тексту (Name, Type, Description, SearchQuery)
+  if (q && typeof q === 'string' && q.trim()) {
+    const normalizedQuery = normalizeString(q);
     const searchTerms = normalizedQuery.split(' ');
 
     results = results.filter((flower: any) => {
       const searchableText = normalizeString(
-        `${flower.name} ${flower.type} ${flower.description || ''}`,
+        `${flower.name} ${flower.type} ${flower.description || ''} ${flower.searchQuery || ''}`,
       );
-
+      // Проверяем, что КАЖДОЕ слово из запроса есть в описании товара
       return searchTerms.every((term: string) => searchableText.includes(term));
     });
   }
 
-  // Фильтр по типу
-  if (type && type !== 'null') {
-    results = results.filter((flower: any) => flower.type === type);
-  }
-
-  // Фильтр по цене
-  if (minPrice !== undefined || maxPrice !== undefined) {
-    results = results.filter((flower: any) => {
-      const finalPrice = Math.round(flower.price * (1 - flower.discount));
-      if (minPrice !== undefined && finalPrice < minPrice) return false;
-      if (maxPrice !== undefined && finalPrice > maxPrice) return false;
-      return true;
-    });
-  }
-
-  // Фильтр топ продаж
-  if (topSales) {
-    results = results.filter((flower: any) => flower.discount > 0.1);
-  }
-
-  res.json({
-    results,
-    total: results.length,
-    query: {
-      q: query || null,
-      type: type || null,
-      minPrice: minPrice || null,
-      maxPrice: maxPrice || null,
-      topSales,
-    },
-  });
-});
-
-// Поиск цветов
-server.get('/flowers/search', (req: Request, res: Response): void => {
-  const query = req.query.q as string;
-  const type = req.query.type as string;
-  const minPrice = req.query.minPrice ? Number(req.query.minPrice) : undefined;
-  const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : undefined;
-  const topSales = req.query.topSales === 'true';
-
-  let results = flowersData.flowers;
-
-  // Фильтр по поисковому запросу
-  if (query && query.trim()) {
-    const normalizedQuery = normalizeString(query);
-    const searchTerms = normalizedQuery.split(' ');
-
-    results = results.filter((flower: any) => {
-      const searchableText = normalizeString(
-        `${flower.name} ${flower.type} ${flower.description || ''} ${flower.searchQuery || ''}`, // добавлено searchQuery
-      );
-
-      return searchTerms.every((term: string) => searchableText.includes(term));
-    });
-  }
-
-  // Фильтр по типу
+  // 2. Фильтр по типу (если не "Все")
   if (type && type !== 'null' && type !== 'Все') {
-    // добавлена проверка на 'Все'
     results = results.filter((flower: any) => flower.type === type);
   }
 
-  // Фильтр по цене
-  if (minPrice !== undefined || maxPrice !== undefined) {
+  // 3. Фильтр по цене (учитывая скидку)
+  const minP = Number(minPrice);
+  const maxP = Number(maxPrice);
+
+  if (!isNaN(minP) || !isNaN(maxP)) {
     results = results.filter((flower: any) => {
       const finalPrice = Math.round(flower.price * (1 - flower.discount));
-      if (minPrice !== undefined && finalPrice < minPrice) return false;
-      if (maxPrice !== undefined && finalPrice > maxPrice) return false;
+      if (!isNaN(minP) && finalPrice < minP) return false;
+      if (!isNaN(maxP) && finalPrice > maxP) return false;
       return true;
     });
   }
 
-  // Фильтр топ продаж
-  if (topSales) {
+  // 4. Топ продаж (например, скидка > 10%)
+  if (topSales === 'true') {
     results = results.filter((flower: any) => flower.discount > 0.1);
   }
 
   res.json({
     results,
     total: results.length,
-    query: {
-      q: query || null,
-      type: type || null,
-      minPrice: minPrice || null,
-      maxPrice: maxPrice || null,
-      topSales,
-    },
+    query: { q, type, minPrice, maxPrice, topSales: topSales === 'true' },
   });
 });
 
-// Получить цветок по ID
 server.get('/flowers/:id', (req: Request, res: Response): void => {
   if (!/^\d+$/.test(req.params.id)) {
     res.status(400).json({ error: 'Invalid ID format' });
