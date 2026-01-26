@@ -217,6 +217,11 @@ server.get('/flowers/search', (req: Request, res: Response): void => {
   });
 });
 
+server.get('/flowers/types', (_req: Request, res: Response): void => {
+  const types = Array.from(new Set(flowersData.flowers.map((f: any) => f.type)));
+  res.json(types);
+});
+
 server.get('/flowers/:id', (req: Request, res: Response): void => {
   if (!/^\d+$/.test(req.params.id)) {
     res.status(400).json({ error: 'Invalid ID format' });
